@@ -20,13 +20,13 @@ Kd_hand = 50; % damping of virtual hand
 hand_frequency = .5*pi; % frequency of hand movements
 hand_amp = 0.3; % Amplitude of the hand motion
 
-Q = 1e3*diag([1, 1]);
+Q = 1e5*diag([1, 1]);
 R = 1; 
 
 K_lqr = lqr(A,B,Q,R);
 
-gain_p = 10;
-gain_d = 10;
+gain_p = 500;
+gain_d = 500;
 
 tEnd = 10;
 
@@ -68,7 +68,7 @@ for i = 1:N
     % model_v = hand_v;
     
     
-    F_int = ((hand_p-robot_p)*Kp_hand + (hand_v-robot_v)*Kd_hand); % force from environment on robot
+    F_int = ((hand_p-robot_p)*Kp_hand + (hand_v-robot_v)*Kd_hand); % force of hand on robot
 
     F_measured = F_int + forceNoise*randn; % assume we measure force without knowing where it came from
 
@@ -78,27 +78,27 @@ for i = 1:N
     model_log(i,:) = [model_p, model_v];
 
 
-    if i<=delay
+    if i<delay
         F_feedback = 0;
         robot_feedback = [0;0];
     else
         F_feedback = F_measured_log(i-delay);
-        robot_feedback = robot_log(i-delay,:)';
+        robot_feedback = robot_log(i-d,:);
+
     end
         
-    Xdot_ad = A_ad*X_ad(:,i) + B_ad*(F_des+F_feedback); % vritual admitance model's dynamics. calculated using feedback force
+    Xdot_ad = A_ad*X_ad(:,i) + B_ad*(F_des+F_feedback); % vritual admitance model's dynamics
     X_ad(:,i+1) = X_ad(:,i) + dt*Xdot_ad;
     
 
 
-    u_pid = gain_p*(model_p-robot_feedback(1)) + gain_d*(model_v-robot_feedback(2));
+    u_pid = gain_p*(model_p-robot_feedback(1)) + gain_d*(model_v-robot_v);
 
-    u_lqr = -K_lqr*(robot_feedback-X_ad(:,i)); % tracking the motion of the virtual system. 
+    u_lqr = -K_lqr*(X(:,i)-X_ad(:,i)); % tracking the motion of the virtual system. 
 
-    u_k = -12 * (F_des - F_feedback);
 
-    Xdot = A*X(:,i) + B*(u_pid+F_measured); % physical system's dynamics. calculated using real (current) force value
 
+    Xdot = A*X(:,i) + B*(u_lqr+F_measured); % physical system's dynamics
 
     X(:,i+1) = X(:,i) + dt*Xdot;
 
