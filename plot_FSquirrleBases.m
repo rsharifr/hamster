@@ -28,4 +28,7 @@ for i = 1:size(B_u,2)-1
 end
 plot3(R(1)+[0,B_l(1,end)],R(2)+[0,B_l(2,end)],R(3)+[0,B_l(3,end)])
 %%
+xlabel('x')
+ylabel('y')
+zlabel('z')
 

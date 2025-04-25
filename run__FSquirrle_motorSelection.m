@@ -20,9 +20,8 @@ C3_u = [RobotCircleRadius*[cosd(-30); sind(-30)]; 0.1];
 
 R = [0;0;0.1]; % robot's handle position. 
 
-r_pulley = 0.005; % radius of of pulley
-p_screw = 0.003; % lead screw pitch
-r_screw = 0.012; % radius of lead screw
+r_pulley = 0.005; % radius of of pulley, in meters
+p_screw = 0.010; % lead screw pitch, in meters
 eff_screw = 0.5; % efficiency of lead screw
 
 hf999 = figure(999); 
@@ -33,12 +32,12 @@ plot_FSquirrleBases(R,C1_u, C2_u, C3_u, A1, A2, A3, figure(999))
 %%
 m = 5;
 
-gearRatio = 2;
+gearRatio = 1;
 
 phiRange = 0:0.05:2*pi;
 
-xRange = -0.3:0.02:0.3;
-yRange = -0.3:0.02:0.1;
+xRange = -0.3:0.05:0.3;
+yRange = -0.3:0.05:0.1;
 zRange = 0.1:0.1:0.5;
 
 numberOfVectors = 1000;
@@ -51,7 +50,7 @@ unitVectors = fibonacci_sphere(numberOfVectors);
 for i = 1:length(xRange)
     for j = 1:length(yRange)
         for k = 1:length(zRange)
-            R = [xRange(i); yRange(j); zRange(k)];
+            R = [xRange(i); yRange(j); zRange(k)]
 
             J_inv = FSquirrle_Jacobian_inverse(R(1),R(2),R(3),A1(1),A1(2),A2(1),A2(2),A3(1),A3(2),C1_u(1),C1_u(2),C1_u(3),C2_u(1),C2_u(2),C2_u(3),C3_u(1),C3_u(2),C3_u(3),r_pulley,p_screw);
             J = FSquirrle_Jacobian(R(1),R(2),R(3),A1(1),A1(2),A2(1),A2(2),A3(1),A3(2),C1_u(1),C1_u(2),C1_u(3),C2_u(1),C2_u(2),C2_u(3),C3_u(1),C3_u(2),C3_u(3),r_pulley,p_screw);
@@ -69,7 +68,7 @@ for i = 1:length(xRange)
                 handForce = -u*F;
                 
                 lineForces = lsqnonneg(B,handForce);
-                tau_F_only = [tau_F_only, lineForces.*[r_pulley/gearRatio; r_pulley/gearRatio; r_pulley/gearRatio; p_screw*r_screw/2/pi/eff_screw]];
+                tau_F_only = [tau_F_only, lineForces.*[r_pulley/gearRatio; r_pulley/gearRatio; r_pulley/gearRatio; p_screw/2/pi/eff_screw]];
 
                 % ax = a*cos(phi+phaseshift);
                 % ay = a*sin(phi+phaseshift);
@@ -112,12 +111,12 @@ end
 figure(2); clf
 for i = 1:size(omega_pulley_line,3)
     subplot(1,2,1)
-    surface(xx, yy, omega_pulley_line(:,:,i)')
+    surface(xx, yy, omega_pulley_line(:,:,i)'*gearRatio * 60/2/pi)
     hold all
     title('max speed - line motors')
     % 
     subplot(1,2,2)
-    surface(xx, yy, omega_pulley_screw(:,:,i)'*gearRatio)
+    surface(xx, yy, omega_pulley_screw(:,:,i)' * 60/2/pi)
     hold all
     title('max speed - screw motor')
 
